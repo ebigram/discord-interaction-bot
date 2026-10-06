@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: discord-interaction-bot
+    runtime: python
+    plan: starter
+    region: ohio
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    healthCheckPath: /healthz
+    disk:
+      name: discord-messages
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: ENUMERATE_CURRENT_SCOPE
+        value: "true"
+      - key: SCOPE_SNAPSHOT_PATH
+        value: /var/data/scope.json
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: COLLECTION_ENABLED
+        value: "false"
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: ALLOWED_USER_IDS
+        sync: false
+      - key: ALLOWED_GUILD_IDS
+        sync: false
+      - key: ALLOWED_CHANNEL_IDS
+        sync: false
+      - key: RETENTION_DAYS
+        value: "7"
+      - key: MAX_MESSAGES
+        value: "10000"
+      - key: DATA_PATH
+        value: /var/data/messages.sqlite3
