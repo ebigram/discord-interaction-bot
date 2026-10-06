@@ -1,6 +1,8 @@
 import tempfile
 import time
 import unittest
+import json
+from unittest.mock import patch
 from pathlib import Path
 from core import Scope, Store, ids
 
@@ -25,6 +27,22 @@ class PrivacyTests(unittest.TestCase):
             store = Store(path, Scope(frozenset(),frozenset(),frozenset()))
             self.assertEqual(store.db.execute('SELECT COUNT(*) FROM messages').fetchone()[0],0)
             store.db.close()
+
+    def test_snapshot_scope_is_frozen_and_server_bound(self):
+        with tempfile.TemporaryDirectory() as directory:
+            snapshot = Path(directory)/'scope.json'
+            snapshot.write_text(json.dumps({'users':[1], 'guilds':[2], 'channels':[3]}))
+            environment = {'ENUMERATE_CURRENT_SCOPE':'true', 'SCOPE_SNAPSHOT_PATH':str(snapshot),
+                           'ALLOWED_GUILD_IDS':'2', 'ALLOWED_USER_IDS':'', 'ALLOWED_CHANNEL_IDS':''}
+            with patch.dict('os.environ', environment, clear=True):
+                scope = Scope.environment()
+                self.assertTrue(scope.allows(1,2,3))
+                self.assertFalse(scope.allows(9,2,3))
+                self.assertFalse(scope.allows(1,2,9))
+            environment['ALLOWED_GUILD_IDS'] = '4'
+            with patch.dict('os.environ', environment, clear=True):
+                with self.assertRaises(ValueError):
+                    Scope.environment()
 
     def test_fail_closed(self):
         self.assertFalse(Scope(frozenset(),frozenset(),frozenset()).allows(1,2,3))

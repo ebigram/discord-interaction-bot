@@ -69,6 +69,11 @@ async def main():
         state['mode'] = 'disconnected'
 
     @client.event
+    async def on_error(event, *args, **kwargs):
+        state['mode'] = 'event_error'
+        stop.set()
+
+    @client.event
     async def on_message(message):
         if state['mode'] != 'connected' or not message.guild or message.webhook_id:
             return
