@@ -135,6 +135,7 @@ if __name__ == '__main__':
     logging.disable(logging.CRITICAL)
     try:
         asyncio.run(main())
-    except Exception:
-        print('Service stopped. Check bot credentials, intents, allowlists, and storage configuration.', flush=True)
+    except Exception as error:
+        # Class name only: never emit exception text or request details.
+        print('Service stopped: ' + type(error).__name__ + '. Check bot credentials, intents, allowlists, and storage configuration.', flush=True)
         raise SystemExit(1)
